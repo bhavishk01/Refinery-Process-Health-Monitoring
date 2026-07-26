@@ -1,0 +1,40 @@
+# Python
+venv/
+backend/venv/
+__pycache__/
+*.pyc
+
+# Node
+frontend/node_modules/
+dist/
+
+# Environment
+.env
+
+# Models
+*.pkl
+*.joblib
+
+# Databases
+*.db
+*.sqlite3
+
+# ML generated files
+ml/processed/
+ml/models/
+
+# Raw datasets
+datasets/raw/
+
+# Reports
+ml/reports/
+
+# IDE
+.vscode/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
