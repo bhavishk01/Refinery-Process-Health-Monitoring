@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
     getNextPrediction,
     restartReplay,
+    loadLiveMonitoring,
     loadNormalOperation,
     loadFault,
 } from "../services/api";
@@ -38,6 +39,7 @@ export default function usePrediction() {
             } else {
                 setActiveAlarm(null);
             }
+
         } catch (error) {
             console.error("Prediction Error:", error);
         }
@@ -52,13 +54,17 @@ export default function usePrediction() {
 
     const startPolling = useCallback(() => {
         stopPolling();
+
         fetchPrediction();
+
         intervalRef.current = setInterval(fetchPrediction, 1000);
     }, [fetchPrediction, stopPolling]);
 
     const start = useCallback(() => {
         if (isRunning) return;
+
         setIsRunning(true);
+
         startPolling();
     }, [isRunning, startPolling]);
 
@@ -67,96 +73,92 @@ export default function usePrediction() {
         setIsRunning(false);
     }, [stopPolling]);
 
-    const restart = useCallback(async () => {
+    const switchDataset = useCallback(async (loader) => {
+
         if (busyRef.current) return;
+
         busyRef.current = true;
         setLoading(true);
 
         try {
+
             stopPolling();
 
-            await restartReplay();
+            await loader();
 
-            setHistory([]);
-            setActiveAlarm(null);
             setPrediction(null);
+            setHistory([]);
+            setSensorValues({});
+            setActiveAlarm(null);
 
             startPolling();
+
             setIsRunning(true);
+
         } catch (error) {
-            console.error("Restart Error:", error);
+
+            console.error(error);
+
         } finally {
+
             busyRef.current = false;
             setLoading(false);
+
         }
-    }, [stopPolling, startPolling]);
+
+    }, [startPolling, stopPolling]);
+
+    const restart = useCallback(async () => {
+
+        await switchDataset(restartReplay);
+
+    }, [switchDataset]);
+
+    const live = useCallback(async () => {
+
+        await switchDataset(loadLiveMonitoring);
+
+    }, [switchDataset]);
 
     const normal = useCallback(async () => {
-        if (busyRef.current) return;
-        busyRef.current = true;
-        setLoading(true);
 
-        try {
-            stopPolling();
+        await switchDataset(loadNormalOperation);
 
-            await loadNormalOperation();
-
-            setHistory([]);
-            setActiveAlarm(null);
-            setPrediction(null);
-
-            startPolling();
-            setIsRunning(true);
-        } catch (error) {
-            console.error("Normal Mode Error:", error);
-        } finally {
-            busyRef.current = false;
-            setLoading(false);
-        }
-    }, [stopPolling, startPolling]);
+    }, [switchDataset]);
 
     const selectFault = useCallback(async (fault) => {
-        if (busyRef.current) return;
-        busyRef.current = true;
-        setLoading(true);
 
-        try {
-            stopPolling();
+        await switchDataset(() => loadFault(fault));
 
-            await loadFault(fault);
-
-            setHistory([]);
-            setActiveAlarm(null);
-            setPrediction(null);
-
-            startPolling();
-            setIsRunning(true);
-        } catch (error) {
-            console.error("Fault Selection Error:", error);
-        } finally {
-            busyRef.current = false;
-            setLoading(false);
-        }
-    }, [stopPolling, startPolling]);
+    }, [switchDataset]);
 
     useEffect(() => {
+
         setIsRunning(true);
+
         startPolling();
 
         return () => stopPolling();
+
     }, [startPolling, stopPolling]);
 
     return {
+
         prediction,
         sensorValues,
         history,
         activeAlarm,
+
         isRunning,
         loading,
+
         start,
         pause,
         restart,
+
+        live,
         normal,
         selectFault,
+
     };
 }

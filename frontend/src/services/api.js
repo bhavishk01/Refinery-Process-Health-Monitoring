@@ -1,30 +1,59 @@
 const BASE_URL = "http://127.0.0.1:8000";
 
-export async function getNextPrediction() {
+async function request(endpoint, options = {}) {
 
-    const res = await fetch(`${BASE_URL}/predict/next`);
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+        headers: {
+            "Content-Type": "application/json",
+        },
+        ...options,
+    });
 
-    if (!res.ok) {
-        throw new Error("Failed to fetch prediction.");
+    if (!response.ok) {
+
+        let message = "Server request failed.";
+
+        try {
+            const error = await response.json();
+            message = error.detail || message;
+        } catch (_) { }
+
+        throw new Error(message);
     }
 
-    return await res.json();
+    const contentType = response.headers.get("content-type");
+
+    if (contentType && contentType.includes("application/json")) {
+        return await response.json();
+    }
+
+    return null;
+}
+
+export async function getNextPrediction() {
+    return request("/predict/next");
 }
 
 export async function restartReplay() {
-    await fetch(`${BASE_URL}/predict/restart`, {
+    return request("/predict/restart", {
+        method: "POST",
+    });
+}
+
+export async function loadLiveMonitoring() {
+    return request("/predict/live", {
         method: "POST",
     });
 }
 
 export async function loadNormalOperation() {
-    await fetch(`${BASE_URL}/predict/normal`, {
+    return request("/predict/normal", {
         method: "POST",
     });
 }
 
 export async function loadFault(faultNumber) {
-    await fetch(`${BASE_URL}/predict/fault/${faultNumber}`, {
+    return request(`/predict/fault/${faultNumber}`, {
         method: "POST",
     });
 }

@@ -12,12 +12,12 @@ function Dashboard() {
         prediction,
         sensorValues,
         history,
-        activeAlarm,
         isRunning,
         loading,
         start,
         pause,
         restart,
+        live,
         normal,
         selectFault,
     } = usePrediction();
@@ -52,6 +52,7 @@ function Dashboard() {
                             onStart={start}
                             onPause={pause}
                             onRestart={restart}
+                            onLive={live}
                             onNormal={normal}
                             onFaultSelect={selectFault}
                         />

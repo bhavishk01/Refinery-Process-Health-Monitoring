@@ -59,8 +59,8 @@ function StatusCards({ prediction, isRunning }) {
                 value={
                     prediction
                         ? predictionCorrect
-                            ? "✔ Correct"
-                            : "✖ Mismatch"
+                            ? "Correct"
+                            : "Mismatch"
                         : "--"
                 }
                 color={
