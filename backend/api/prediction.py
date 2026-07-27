@@ -12,10 +12,9 @@ prediction_service = PredictionService()
 
 try:
     ModelLoader.load_models()
-    prediction_service.load_demo_dataset()
+    prediction_service.load_live_dataset()
 except Exception as e:
     print(f"Startup Error: {e}")
-
 
 @router.get("/next")
 def predict_next():
@@ -30,14 +29,24 @@ def predict_next():
 
     return result
 
-
 @router.post("/restart")
 def restart_replay():
 
     prediction_service.restart()
 
     return {
+        "success": True,
         "message": "Replay restarted successfully."
+    }
+
+@router.post("/live")
+def load_live_monitoring():
+
+    prediction_service.load_live_dataset()
+
+    return {
+        "success": True,
+        "message": "Live plant monitoring started."
     }
 
 @router.post("/normal")
@@ -46,6 +55,7 @@ def load_normal():
     prediction_service.load_normal_dataset()
 
     return {
+        "success": True,
         "message": "Normal operation loaded."
     }
 
@@ -61,5 +71,6 @@ def load_fault(fault_number: int):
     prediction_service.load_fault_dataset(fault_number)
 
     return {
-        "message": f"Fault {fault_number} loaded successfully."
+        "success": True,
+        "message": f"Fault Scenario F{fault_number} loaded."
     }
