@@ -2,7 +2,7 @@
 venv/
 backend/venv/
 __pycache__/
-*.pyc
+*.py[cod]
 
 # Node
 frontend/node_modules/
@@ -31,9 +31,15 @@ ml/reports/
 
 # IDE
 .vscode/
+.idea/
 
 # Logs
 *.log
+
+# Temporary development scripts
+check_*.py
+test_*.py
+backend_tree.txt
 
 # OS
 .DS_Store

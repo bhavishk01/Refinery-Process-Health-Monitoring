@@ -1,7 +1,10 @@
 import pandas as pd
 from datetime import datetime
-
-from core.config import FAULT_FREE_TEST_DATA, FAULTY_TEST_DATA
+from core.config import (
+    FAULT_FREE_TEST_DATA,
+    FAULTY_TEST_DATA,
+    DEMO_REPLAY_DATA,
+)
 from core.model_loader import ModelLoader
 
 
@@ -18,6 +21,12 @@ class PredictionService:
         self.current_index = 0
 
         print(f"Loaded {len(self.dataset)} normal samples.")
+
+    def load_demo_dataset(self):
+
+        self.dataset = pd.read_csv(DEMO_REPLAY_DATA)
+        self.current_index = 0
+        print(f"Loaded {len(self.dataset)} demo replay samples.")
 
     def load_fault_dataset(self, fault_number: int):
 
@@ -45,17 +54,16 @@ class PredictionService:
     def predict_next(self):
 
         if not self.has_next():
-            return None
+            self.restart()
 
         row = self.dataset.iloc[self.current_index]
-
         self.current_index += 1
 
-        metadata = {
+        metadata = [
             "faultNumber",
             "simulationRun",
             "sample",
-        }
+        ]
 
         feature_columns = [
             col

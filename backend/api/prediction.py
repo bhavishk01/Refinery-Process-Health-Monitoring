@@ -8,12 +8,11 @@ router = APIRouter(
     tags=["Prediction"]
 )
 
-# Single service instance for replay
 prediction_service = PredictionService()
 
 try:
     ModelLoader.load_models()
-    prediction_service.load_normal_dataset()
+    prediction_service.load_demo_dataset()
 except Exception as e:
     print(f"Startup Error: {e}")
 

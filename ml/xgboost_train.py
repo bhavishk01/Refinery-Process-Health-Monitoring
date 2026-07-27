@@ -26,7 +26,7 @@ print("\nCreating XGBoost model...")
 
 model = XGBClassifier(
 
-    objective="multi:softmax",
+    objective="multi:softprob",
     num_class=21,
 
     n_estimators=150,
