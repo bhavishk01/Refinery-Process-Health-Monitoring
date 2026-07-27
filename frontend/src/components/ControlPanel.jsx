@@ -2,6 +2,7 @@ import { useState } from "react";
 
 function ControlPanel({
     isRunning,
+    loading,
     onStart,
     onPause,
     onRestart,
@@ -26,9 +27,9 @@ function ControlPanel({
 
                 <button
                     onClick={onStart}
-                    disabled={isRunning}
-                    className={`rounded-lg py-2 font-semibold transition ${isRunning
-                            ? "bg-green-800 cursor-not-allowed"
+                    disabled={isRunning || loading}
+                    className={`rounded-lg py-2 font-semibold transition ${isRunning || loading
+                            ? "bg-green-800 cursor-not-allowed opacity-60"
                             : "bg-green-600 hover:bg-green-700"
                         }`}
                 >
@@ -37,9 +38,9 @@ function ControlPanel({
 
                 <button
                     onClick={onPause}
-                    disabled={!isRunning}
-                    className={`rounded-lg py-2 font-semibold transition ${!isRunning
-                            ? "bg-yellow-800 cursor-not-allowed"
+                    disabled={!isRunning || loading}
+                    className={`rounded-lg py-2 font-semibold transition ${!isRunning || loading
+                            ? "bg-yellow-800 cursor-not-allowed opacity-60"
                             : "bg-yellow-600 hover:bg-yellow-700"
                         }`}
                 >
@@ -48,14 +49,22 @@ function ControlPanel({
 
                 <button
                     onClick={onRestart}
-                    className="bg-blue-600 hover:bg-blue-700 rounded-lg py-2 font-semibold"
+                    disabled={loading}
+                    className={`rounded-lg py-2 font-semibold transition ${loading
+                            ? "bg-blue-800 cursor-not-allowed opacity-60"
+                            : "bg-blue-600 hover:bg-blue-700"
+                        }`}
                 >
                     🔄 Restart
                 </button>
 
                 <button
                     onClick={onNormal}
-                    className="bg-purple-600 hover:bg-purple-700 rounded-lg py-2 font-semibold"
+                    disabled={loading}
+                    className={`rounded-lg py-2 font-semibold transition ${loading
+                            ? "bg-purple-800 cursor-not-allowed opacity-60"
+                            : "bg-purple-600 hover:bg-purple-700"
+                        }`}
                 >
                     Normal
                 </button>
@@ -73,9 +82,12 @@ function ControlPanel({
                     <button
                         key={fault}
                         onClick={() => handleFault(fault)}
-                        className={`rounded-lg py-2 font-bold transition ${selectedFault === fault
-                                ? "bg-red-600"
-                                : "bg-slate-800 hover:bg-slate-700"
+                        disabled={loading}
+                        className={`rounded-lg py-2 font-bold transition ${loading
+                                ? "bg-slate-800 cursor-not-allowed opacity-60"
+                                : selectedFault === fault
+                                    ? "bg-red-600"
+                                    : "bg-slate-800 hover:bg-slate-700"
                             }`}
                     >
                         {fault}

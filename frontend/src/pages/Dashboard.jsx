@@ -14,6 +14,7 @@ function Dashboard() {
         history,
         activeAlarm,
         isRunning,
+        loading,
         start,
         pause,
         restart,
@@ -47,6 +48,7 @@ function Dashboard() {
 
                         <ControlPanel
                             isRunning={isRunning}
+                            loading={loading}
                             onStart={start}
                             onPause={pause}
                             onRestart={restart}

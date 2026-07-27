@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
     getNextPrediction,
     restartReplay,
@@ -11,18 +11,21 @@ export default function usePrediction() {
     const [sensorValues, setSensorValues] = useState({});
     const [history, setHistory] = useState([]);
     const [activeAlarm, setActiveAlarm] = useState(null);
-    const [isRunning, setIsRunning] = useState(true);
+    const [isRunning, setIsRunning] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const intervalRef = useRef(null);
+    const busyRef = useRef(false);
 
-    const fetchPrediction = async () => {
+    const fetchPrediction = useCallback(async () => {
+        if (busyRef.current) return;
+
         try {
             const data = await getNextPrediction();
 
             if (!data || data.detail) return;
 
             setPrediction(data);
-
             setSensorValues(data.sensor_data || {});
 
             setHistory((prev) => {
@@ -38,76 +41,110 @@ export default function usePrediction() {
         } catch (error) {
             console.error("Prediction Error:", error);
         }
-    };
+    }, []);
 
-    const start = () => {
-        if (intervalRef.current) return;
-
-        setIsRunning(true);
-
-        fetchPrediction();
-
-        intervalRef.current = setInterval(fetchPrediction, 1000);
-    };
-
-    const pause = () => {
+    const stopPolling = useCallback(() => {
         if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
         }
+    }, []);
 
+    const startPolling = useCallback(() => {
+        stopPolling();
+        fetchPrediction();
+        intervalRef.current = setInterval(fetchPrediction, 1000);
+    }, [fetchPrediction, stopPolling]);
+
+    const start = useCallback(() => {
+        if (isRunning) return;
+        setIsRunning(true);
+        startPolling();
+    }, [isRunning, startPolling]);
+
+    const pause = useCallback(() => {
+        stopPolling();
         setIsRunning(false);
-    };
+    }, [stopPolling]);
 
-    const restart = async () => {
+    const restart = useCallback(async () => {
+        if (busyRef.current) return;
+        busyRef.current = true;
+        setLoading(true);
+
         try {
+            stopPolling();
+
             await restartReplay();
 
             setHistory([]);
             setActiveAlarm(null);
+            setPrediction(null);
 
-            await fetchPrediction();
+            startPolling();
+            setIsRunning(true);
         } catch (error) {
             console.error("Restart Error:", error);
+        } finally {
+            busyRef.current = false;
+            setLoading(false);
         }
-    };
+    }, [stopPolling, startPolling]);
 
-    const normal = async () => {
+    const normal = useCallback(async () => {
+        if (busyRef.current) return;
+        busyRef.current = true;
+        setLoading(true);
+
         try {
+            stopPolling();
+
             await loadNormalOperation();
 
             setHistory([]);
             setActiveAlarm(null);
+            setPrediction(null);
 
-            await fetchPrediction();
+            startPolling();
+            setIsRunning(true);
         } catch (error) {
             console.error("Normal Mode Error:", error);
+        } finally {
+            busyRef.current = false;
+            setLoading(false);
         }
-    };
+    }, [stopPolling, startPolling]);
 
-    const selectFault = async (fault) => {
+    const selectFault = useCallback(async (fault) => {
+        if (busyRef.current) return;
+        busyRef.current = true;
+        setLoading(true);
+
         try {
+            stopPolling();
+
             await loadFault(fault);
 
             setHistory([]);
             setActiveAlarm(null);
+            setPrediction(null);
 
-            await fetchPrediction();
+            startPolling();
+            setIsRunning(true);
         } catch (error) {
             console.error("Fault Selection Error:", error);
+        } finally {
+            busyRef.current = false;
+            setLoading(false);
         }
-    };
+    }, [stopPolling, startPolling]);
 
     useEffect(() => {
-        start();
+        setIsRunning(true);
+        startPolling();
 
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
-        };
-    }, []);
+        return () => stopPolling();
+    }, [startPolling, stopPolling]);
 
     return {
         prediction,
@@ -115,6 +152,7 @@ export default function usePrediction() {
         history,
         activeAlarm,
         isRunning,
+        loading,
         start,
         pause,
         restart,
